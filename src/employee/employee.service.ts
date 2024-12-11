@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Employee } from './schemas/employee.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class EmployeeService {
-  create(createEmployeeDto: CreateEmployeeDto) {
-    return 'This action adds a new employee';
+  constructor(
+    @InjectModel(Employee.name) private readonly employeeModel: Model<Employee>,
+  ) {}
+
+  async create(createEmployeeDto: CreateEmployeeDto): Promise<Employee> {
+    const newEmployee = new this.employeeModel(createEmployeeDto);
+    return await newEmployee.save();
   }
 
-  findAll() {
-    return `This action returns all employee`;
+  async findAll(): Promise<Employee[]> {
+    return await this.employeeModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} employee`;
+  async findOne(id: string): Promise<Employee> {
+    return await this.employeeModel.findById(id).exec();
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+  async update(id: string, updateData: Partial<Employee>): Promise<Employee> {
+    return await this.employeeModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    }).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} employee`;
+  async delete(id: string): Promise<Employee> {
+    return await this.employeeModel.findByIdAndRemove(id).exec();
   }
 }
